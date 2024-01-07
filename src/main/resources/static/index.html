@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Selection</title>
+    <style>
+        #columnContainer {
+            display: flex;
+            justify-content: space-between; /* Распределение между столбцами */
+        }
+
+        button {
+            margin-bottom: 10px; /* Выберите нужное вам значение */
+            width: 80%;
+            height: 30px; /* Выберите желаемую высоту */
+        }
+
+        #leftColumn, #rightColumn {
+            flex: 1;
+            border: 1px solid #ccc; /* Добавлены границы для наглядности */
+            padding: 15px; /* Добавлен отступ для разделения кнопок */
+            justify-content: center;
+        }
+
+        button.selected {
+            background-color: #aaf; /* Цвет фона для выделенных кнопок */
+        }
+    </style>
+    <!-- Подключение jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+<!-- Контейнер для отображения слов -->
+<div id="columnContainer">
+    <div class="column" id="leftColumn"></div>
+    <div class="column" id="rightColumn"></div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+    let selectedWords = [];
+    let words;
+
+    function displayRandomWords(wordsArray) {
+    words = wordsArray;
+    const leftColumnContainer = $("#leftColumn");
+    const rightColumnContainer = $("#rightColumn");
+    const randomWords = getRandomElements(wordsArray, 5);
+
+    // Получаем случайный порядок индексов
+    const randomIndexes = getRandomIndexes(randomWords.length);
+
+        createButtonsForWord(leftColumnContainer, randomWords[0], "english")
+        createButtonsForWord(leftColumnContainer, randomWords[1], "english");
+        createButtonsForWord(leftColumnContainer, randomWords[2], "english");
+        createButtonsForWord(leftColumnContainer, randomWords[3], "english");
+        createButtonsForWord(leftColumnContainer, randomWords[4], "english");
+
+    // Создаем кнопки для правого столбца с использованием того же порядка
+    for (let i = 0; i < randomIndexes.length; i++) {
+        createButtonsForWord(rightColumnContainer, wordsArray[randomIndexes[i]], "german");
+    }
+}
+
+function getRandomIndexes(length) {
+    // Создаем массив индексов от 0 до length - 1
+    const indexes = Array.from({ length: length }, (_, i) => i);
+    // Перемешиваем массив
+    const shuffledIndexes = indexes.sort(() => Math.random() - 0.5);
+    return shuffledIndexes;
+}
+
+<!--    function displayRandomWords(wordsArray) {-->
+<!--        words = wordsArray;-->
+<!--        const leftColumnContainer = $("#leftColumn");-->
+<!--        const rightColumnContainer = $("#rightColumn");-->
+<!--        const randomWords = getRandomElements(wordsArray, 5);-->
+
+<!--        createButtonsForWord(leftColumnContainer, randomWords[0], "english");-->
+<!--        createButtonsForWord(rightColumnContainer, randomWords[0], "german");-->
+<!--        createButtonsForWord(leftColumnContainer, randomWords[1], "english");-->
+<!--        createButtonsForWord(rightColumnContainer, randomWords[1], "german");-->
+<!--        createButtonsForWord(leftColumnContainer, randomWords[2], "english");-->
+<!--        createButtonsForWord(rightColumnContainer, randomWords[2], "german");-->
+<!--        createButtonsForWord(leftColumnContainer, randomWords[3], "english");-->
+<!--        createButtonsForWord(rightColumnContainer, randomWords[3], "german");-->
+<!--        createButtonsForWord(leftColumnContainer, randomWords[4], "english");-->
+<!--        createButtonsForWord(rightColumnContainer, randomWords[4], "german");-->
+<!--    }-->
+
+    function createButtonsForWord(container, word, language) {
+        const buttonText = language === "german" ? word.german : word.english;
+
+        const button = $("<button>")
+            .text(buttonText)
+            .data({ "language": language, "word": word })  // Сохраняем информацию о языке и слове в data
+            .click(function () {
+                button.addClass("selected");
+                handleButtonClick($(this).data("word"));
+            });
+
+        const row = $("<div>").append(button);
+        container.append(row);
+    }
+
+    function handleButtonClick(word) {
+        selectedWords.push(word);
+
+        // Если выбрано два слова и они относятся к одному объекту Word
+        if (selectedWords.length === 2 && selectedWords[0].id === selectedWords[1].id) {
+            replaceWordsOnButtons();
+        } else if (selectedWords.length === 2) {
+            // Если выбраны два слова, но они относятся к разным объектам Word, очистим выбор
+            selectedWords = [];
+            $(".selected").removeClass("selected");
+        }
+
+        console.log(selectedWords);
+    }
+
+    function replaceWordsOnButtons() {
+        const newRandomWords = getRandomElements(words, 1);
+        const newWord = newRandomWords[0];
+
+        const selectedWord = selectedWords[0];
+
+            $(`.selected:contains(${selectedWord.german})`).data({ "word": newWord });
+            $(`.selected:contains(${selectedWord.german})`).text(newWord.german);
+            $(`.selected:contains(${selectedWord.english})`).data({ "word": newWord });
+            $(`.selected:contains(${selectedWord.english})`).text(newWord.english);
+
+        // Очистим выбор
+        selectedWords = [];
+        $(".selected").removeClass("selected");
+    }
+
+    function getRandomElements(arr, count) {
+        const shuffled = arr.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+
+    $.get("/api/words", function (wordsArray) {
+        displayRandomWords(wordsArray);
+    });
+});
+
+</script>
+
+
+</body>
+</html>
