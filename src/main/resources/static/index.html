@@ -8,6 +8,22 @@
         body {
             background-color: #000000; /* черный цвет фона */
             color: #ffffff; /* белый цвет текста */
+            margin: 0; /* Убираем отступы по умолчанию */
+        }
+
+        #headerContainer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+
+        #clickCounter {
+            font-size: 18px;
+            position: absolute;
+            top: 20%; /* Размещаем счетчик сверху контейнера */
+            left: 50%; /* Размещаем счетчик по центру контейнера */
+            transform: translateX(-50%); /* Центрируем счетчик относительно верхнего края */
         }
 
         #columnContainer {
@@ -16,17 +32,19 @@
             align-items: center;
             height: 100vh;
             border: none;
+            position: relative; /* Добавлено свойство position */
         }
 
         button {
             margin-bottom: 10px; /* Выберите нужное вам значение */
-            width: 140px;
-            height: 40px; /* Выберите желаемую высоту */
+            width: 170px;
+            height: 60px; /* Выберите желаемую высоту */
             border-radius: 8px;
             background-color: #000000; /* Цвет фона */
             color: #ffffff; /* Цвет текста */
             border: 2px solid #ffffff;
             margin-left: auto;
+            font-size: 16px;
         }
 
         button:hover {
@@ -46,7 +64,7 @@
         #leftColumn {
             flex: 1;
             border: 1px solid #ccc; /* Добавлены границы для наглядности */
-            padding: 25px; /* Добавлен отступ для разделения кнопок */
+            padding: 15px; /* Добавлен отступ для разделения кнопок */
             display: flex;
             flex-direction: column;
         }
@@ -54,7 +72,7 @@
         #rightColumn {
             flex: 1;
             border: 1px solid #ccc; /* Добавлены границы для наглядности */
-            padding: 25px; /* Добавлен отступ для разделения кнопок */
+            padding: 15px; /* Добавлен отступ для разделения кнопок */
             justify-content: center;
         }
 
@@ -64,11 +82,17 @@
 </head>
 <body>
 
-<!-- Контейнер для отображения слов -->
-<div id="columnContainer">
-    <div class="column" id="leftColumn"></div>
-    <div class="column" id="rightColumn"></div>
+<div id="headerContainer">
+    <!-- Счетчик правильных кликов -->
+    <div id="clickCounter">Matched pairs: 0</div>
+
+    <!-- Контейнер для отображения слов -->
+    <div id="columnContainer">
+        <div class="column" id="leftColumn"></div>
+        <div class="column" id="rightColumn"></div>
+    </div>
 </div>
+
 
 <script type="text/javascript">
     $(document).ready(function () {
@@ -129,6 +153,12 @@ function getRandomIndexes(length) {
         container.append(row);
     }
 
+    let correctClicks = 0;
+
+    function updateClickCounter() {
+        $("#clickCounter").text("Matched pairs: " + correctClicks);
+    }
+
     function handleButtonClick(data) {
         selectedWords.push(data);
 
@@ -139,6 +169,8 @@ function getRandomIndexes(length) {
             selectedWords[0].word.id === selectedWords[1].word.id
         ) {
             replaceWordsOnButtons();
+            correctClicks++; // Увеличиваем счетчик правильных кликов
+            updateClickCounter(); // Обновляем отображение счетчика
         } else if (selectedWords.length === 2) {
             // Если выбраны два слова, но они относятся к разным объектам Word, очистим выбор
             selectedWords = [];
