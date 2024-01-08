@@ -21,17 +21,17 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         List<Word> wordList = Arrays.asList(
-                new Word("Haus", "house"),
-                new Word("Licht", "light"),
-                new Word("Witz", "joke"),
-                new Word("Mann", "man"),
-                new Word("Frau", "woman"),
-                new Word("schnell", "quick"),
-                new Word("groß", "large"),
-                new Word("klein", "little"),
-                new Word("Käse", "cheese"),
-                new Word("Beruf", "profession"),
-                new Word("Teil", "part"),
+//                new Word("Haus", "house"),
+//                new Word("Licht", "light"),
+//                new Word("Witz", "joke"),
+//                new Word("Mann", "man"),
+//                new Word("Frau", "woman"),
+//                new Word("schnell", "quick"),
+//                new Word("groß", "large"),
+//                new Word("klein", "little"),
+//                new Word("Käse", "cheese"),
+//                new Word("Beruf", "profession"),
+//                new Word("Teil", "part"),
                 new Word("Kind", "kid")
         );
 
