@@ -5,27 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Selection</title>
     <style>
+        body {
+            background-color: #000000; /* черный цвет фона */
+            color: #ffffff; /* белый цвет текста */
+        }
+
         #columnContainer {
             display: flex;
             justify-content: space-between; /* Распределение между столбцами */
+            align-items: center;
+            height: 100vh;
+            border: none;
         }
 
         button {
             margin-bottom: 10px; /* Выберите нужное вам значение */
-            width: 80%;
-            height: 30px; /* Выберите желаемую высоту */
+            width: 140px;
+            height: 40px; /* Выберите желаемую высоту */
+            border-radius: 8px;
+            background-color: #000000; /* Цвет фона */
+            color: #ffffff; /* Цвет текста */
+            border: 2px solid #ffffff;
+            margin-left: auto;
         }
 
-        #leftColumn, #rightColumn {
-            flex: 1;
-            border: 1px solid #ccc; /* Добавлены границы для наглядности */
-            padding: 15px; /* Добавлен отступ для разделения кнопок */
-            justify-content: center;
+        button:hover {
+            background-color: #2e86de; /* Измените цвет при наведении, если нужно */
+        }
+
+        button:active {
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); /* Эффект при нажатии */
         }
 
         button.selected {
-            background-color: #aaf; /* Цвет фона для выделенных кнопок */
+            background-color: #000000;
+            border-color: #3498db;
+            color: #3498db; /* Цвет текста */
         }
+
+        #leftColumn {
+            flex: 1;
+            border: 1px solid #ccc; /* Добавлены границы для наглядности */
+            padding: 25px; /* Добавлен отступ для разделения кнопок */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #rightColumn {
+            flex: 1;
+            border: 1px solid #ccc; /* Добавлены границы для наглядности */
+            padding: 25px; /* Добавлен отступ для разделения кнопок */
+            justify-content: center;
+        }
+
     </style>
     <!-- Подключение jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -80,19 +112,32 @@ function getRandomIndexes(length) {
             .text(buttonText)
             .data({ "language": language, "word": word })  // Сохраняем информацию о языке и слове в data
             .click(function () {
-                button.addClass("selected");
-                handleButtonClick($(this).data("word"));
+                let isSelected = $(this).hasClass("selected");
+
+                if (isSelected) {
+                // Если кнопка уже выбрана, снимаем статус "selected"
+                $(this).removeClass("selected");
+                selectedWords = [];
+            } else {
+                // Если кнопка не выбрана, устанавливаем статус "selected"
+                $(this).addClass("selected");
+                handleButtonClick($(this).data());
+                }
             });
 
         const row = $("<div>").append(button);
         container.append(row);
     }
 
-    function handleButtonClick(word) {
-        selectedWords.push(word);
+    function handleButtonClick(data) {
+        selectedWords.push(data);
 
-        // Если выбрано два слова и они относятся к одному объекту Word
-        if (selectedWords.length === 2 && selectedWords[0].id === selectedWords[1].id) {
+        // Если выбрано два слова и они относятся к одному объекту Word и к разным языкам
+        if (
+            selectedWords.length === 2 &&
+            selectedWords[0].language !== selectedWords[1].language &&
+            selectedWords[0].word.id === selectedWords[1].word.id
+        ) {
             replaceWordsOnButtons();
         } else if (selectedWords.length === 2) {
             // Если выбраны два слова, но они относятся к разным объектам Word, очистим выбор
@@ -104,7 +149,7 @@ function getRandomIndexes(length) {
     }
 
     function replaceWordsOnButtons() {
-        const selectedWord = selectedWords[0];
+        const selectedWord = selectedWords[0].word;
         selectedWords = [];
         const germanButton = $(`.selected:contains(${selectedWord.german})`);
         const englishButton = $(`.selected:contains(${selectedWord.english})`);
