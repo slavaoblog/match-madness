@@ -1,5 +1,5 @@
 spring:
-  profile:
+  profiles:
     default: 'development'
   datasource:
     url: 'jdbc:h2:mem:test'
