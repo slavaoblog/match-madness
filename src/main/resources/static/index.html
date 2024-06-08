@@ -45,6 +45,7 @@
             border: 2px solid #ffffff;
             margin-left: auto;
             font-size: 16px;
+            transition: border-color 0.5s, color 0.5s;
         }
 
         button:hover {
@@ -61,19 +62,34 @@
             color: #3498db; /* Цвет текста */
         }
 
+        button.highlighted {
+            border-color: #f39c12; /* Цвет границы при наведении */
+            color: #f39c12; /* Цвет текста при наведении */
+        }
+
+        button.fade-out {
+            transition: border-color 0.5s, color 0.5s, border-width 0.5s;
+            color: #000000 !important;
+            border-color: #000000 !important;
+            border-width: 0 !important;
+            pointer-events: none;
+        }
+
         #leftColumn {
             flex: 1;
-            border: 1px solid #ccc; /* Добавлены границы для наглядности */
+            border: 1px solid black; /* Добавлены границы для наглядности */
             padding: 15px; /* Добавлен отступ для разделения кнопок */
             display: flex;
             flex-direction: column;
+            margin-right: 30px; /* Отступ справа */
         }
 
         #rightColumn {
             flex: 1;
-            border: 1px solid #ccc; /* Добавлены границы для наглядности */
+            border: 1px solid black; /* Добавлены границы для наглядности */
             padding: 15px; /* Добавлен отступ для разделения кнопок */
             justify-content: center;
+            margin-left: 30px; /* Отступ слева */
         }
 
     </style>
@@ -93,152 +109,195 @@
     </div>
 </div>
 
-
 <script type="text/javascript">
     $(document).ready(function () {
-    let selectedWords = [];
-    let wordBankLeft = [];
-    let wordBankRight = [];
-    let words;
+        let selectedWords = [];
+        let wordBankLeft = [];
+        let wordBankRight = [];
+        let words;
+        let previousHighlightedButton = null;
+        let previousColumn = null;
 
-    function displayRandomWords(wordsArray) {
-    words = wordsArray;
-    const leftColumnContainer = $("#leftColumn");
-    const rightColumnContainer = $("#rightColumn");
-    const randomWords = getRandomElements(wordsArray, 5);
+        function displayRandomWords(wordsArray) {
+            words = wordsArray;
+            const leftColumnContainer = $("#leftColumn");
+            const rightColumnContainer = $("#rightColumn");
+            const randomWords = getRandomElements(wordsArray, 5);
 
-    // Получаем случайный порядок индексов
-    const randomIndexes = getRandomIndexes(randomWords.length);
+            // Получаем случайный порядок индексов
+            const randomIndexes = getRandomIndexes(randomWords.length);
 
-    for (let i = 0; i < randomWords.length; i++) {
-        createButtonsForWord(leftColumnContainer, randomWords[i], "english");
-    }
+            for (let i = 0; i < randomWords.length; i++) {
+                createButtonsForWord(leftColumnContainer, randomWords[i], "english");
+            }
 
-    // Создаем кнопки для правого столбца с использованием того же порядка
-    for (let i = 0; i < randomIndexes.length; i++) {
-        createButtonsForWord(rightColumnContainer, randomWords[randomIndexes[i]], "german");
-    }
-}
-
-function getRandomIndexes(length) {
-    // Создаем массив индексов от 0 до length - 1
-    const indexes = Array.from({ length: length }, (_, i) => i);
-    // Перемешиваем массив
-    const shuffledIndexes = indexes.sort(() => Math.random() - 0.5);
-    return shuffledIndexes;
-}
-
-
-    function createButtonsForWord(container, word, language) {
-        const buttonText = language === "german" ? word.german : word.english;
-
-        const button = $("<button>")
-            .text(buttonText)
-            .data({ "language": language, "word": word })  // Сохраняем информацию о языке и слове в data
-            .click(function () {
-                let isSelected = $(this).hasClass("selected");
-
-                if (isSelected) {
-                // Если кнопка уже выбрана, снимаем статус "selected"
-                $(this).removeClass("selected");
-                selectedWords = [];
-            } else {
-                // Если кнопка не выбрана, устанавливаем статус "selected"
-                $(this).addClass("selected");
-                handleButtonClick($(this).data());
-                }
-            });
-
-        const row = $("<div>").append(button);
-        container.append(row);
-    }
-
-    let correctClicks = 0;
-
-    function updateClickCounter() {
-        $("#clickCounter").text("Matched pairs: " + correctClicks);
-    }
-
-    function handleButtonClick(data) {
-        selectedWords.push(data);
-
-        // Если выбрано два слова и они относятся к одному объекту Word и к разным языкам
-        if (
-            selectedWords.length === 2 &&
-            selectedWords[0].language !== selectedWords[1].language &&
-            selectedWords[0].word.id === selectedWords[1].word.id
-        ) {
-            replaceWordsOnButtons();
-            correctClicks++; // Увеличиваем счетчик правильных кликов
-            updateClickCounter(); // Обновляем отображение счетчика
-        } else if (selectedWords.length === 2) {
-            // Если выбраны два слова, но они относятся к разным объектам Word, очистим выбор
-            selectedWords = [];
-            $(".selected").removeClass("selected");
+            // Создаем кнопки для правого столбца с использованием того же порядка
+            for (let i = 0; i < randomIndexes.length; i++) {
+                createButtonsForWord(rightColumnContainer, randomWords[randomIndexes[i]], "german");
+            }
         }
 
-        console.log(selectedWords);
-    }
+        function getRandomIndexes(length) {
+            // Создаем массив индексов от 0 до length - 1
+            const indexes = Array.from({ length: length }, (_, i) => i);
+            // Перемешиваем массив
+            const shuffledIndexes = indexes.sort(() => Math.random() - 0.5);
+            return shuffledIndexes;
+        }
 
-    function replaceWordsOnButtons() {
-        const selectedWord = selectedWords[0].word;
-        selectedWords = [];
-        const germanButton = $(`.selected:contains(${selectedWord.german})`);
-        const englishButton = $(`.selected:contains(${selectedWord.english})`);
+        function createButtonsForWord(container, word, language) {
+            const buttonText = language === "german" ? word.german : word.english;
 
-        const newRandomWords = getRandomElements(words, 1);
-        const newWord = newRandomWords[0];
-        wordBankLeft.push(newWord);
-        wordBankRight.push(newWord);
+            const button = $("<button>")
+                .text(buttonText)
+                .data({ "language": language, "word": word })  // Сохраняем информацию о языке и слове в data
+                .on("mouseenter", function () {
+                    const currentColumn = $(this).closest(".column").attr("id");
+                    const isHighlighted = $(this).hasClass("highlighted");
 
-        setTimeout(function () {
-        germanButton.removeClass("selected");
-        englishButton.removeClass("selected");
-        germanButton.text("");
-        englishButton.text("");
-        }, 300);
+                    // Если кнопка уже выделена, выходим из обработчика
+                    if (isHighlighted) return;
 
-        setTimeout(function () {
-            const randomWordGer = getRandomAndRemove(wordBankRight);
-            const randomWordEng = getRandomAndRemove(wordBankLeft);
-            germanButton.data({ "word": randomWordGer });
-            germanButton.text(randomWordGer.german);
-            englishButton.data({ "word": randomWordEng });
-            englishButton.text(randomWordEng.english);
-        }, 1500);
-    }
+                    // Если это первое наведение курсора на кнопку
+                    if (!previousColumn || !previousHighlightedButton) {
+                        $(this).addClass("highlighted");
+                        previousColumn = currentColumn;
+                        previousHighlightedButton = $(this);
+                        selectedWords.push($(this).data());
+                        return;
+                    }
 
-    function getRandomElements(arr, count) {
-        const shuffled = arr.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
-    }
+                    // Если находимся в той же колонке, что и предыдущая выделенная кнопка
+                    if (previousColumn === currentColumn) {
+                        if (previousHighlightedButton) {
+                            previousHighlightedButton.removeClass("highlighted");
+                        }
+                        $(this).addClass("highlighted");
+                        previousHighlightedButton = $(this);
+                        selectedWords = [];
+                        selectedWords.push($(this).data());
+                    } else {
+                        // Если находимся в разных колонках, то выполняем проверку
+                        $(this).addClass("highlighted");
+                        handleButtonHover($(this).data());
+                    }
+                });
 
-    function getRandomAndRemove(arr) {
-    // Проверяем, что массив не пустой
-    if (arr.length === 0) {
-        return null; // Если массив пуст, возвращаем null
-    }
+            const row = $("<div>").append(button);
+            container.append(row);
+        }
 
-    // Генерируем случайный индекс
-    const randomIndex = Math.floor(Math.random() * arr.length);
+        let correctClicks = 0;
 
-    // Получаем случайный элемент
-    const randomElement = arr[randomIndex];
+        function updateClickCounter() {
+            $("#clickCounter").text("Matched pairs: " + correctClicks);
+        }
 
-    // Удаляем элемент из массива
-    arr.splice(randomIndex, 1);
+        function handleButtonHover(data) {
+            previousHighlightedButton = null;
+            previousColumn = null;
+            selectedWords.push(data);
 
-    return randomElement; // Возвращаем случайный элемент
-}
+            // Если выбрано два слова и они относятся к одному объекту Word и к разным языкам
+            if (
+                selectedWords.length === 2 &&
+                selectedWords[0].language !== selectedWords[1].language &&
+                selectedWords[0].word.id === selectedWords[1].word.id
+            ) {
+                replaceWordsOnButtons();
+                correctClicks++; // Увеличиваем счетчик правильных кликов
+                updateClickCounter(); // Обновляем отображение счетчика
+            } else {
+                // Если выбраны несколько слов, очистим выбор
+                selectedWords = [];
+                $(".highlighted").removeClass("highlighted");
+            }
+
+            // Проверяем, находятся ли выделенные кнопки в одном столбце
+            const currentColumn = $(this).closest(".column").attr("id");
+            const sameColumnButtons = $(".highlighted").filter(function() {
+                return $(this).closest(".column").attr("id") === currentColumn;
+            });
+
+            if (sameColumnButtons.length > 1) {
+                // Если выделено больше одной кнопки в этом столбце, снимаем выделение с предыдущей кнопки
+                const previousButton = sameColumnButtons.not(this).first();
+                previousButton.removeClass("highlighted");
+                const index = selectedWords.findIndex(wordData => wordData.word.id === previousButton.data("word").id);
+                if (index !== -1) {
+                    selectedWords.splice(index, 1);
+                }
+            }
+
+            console.log(selectedWords);
+        }
+
+        function replaceWordsOnButtons() {
+            const selectedWord = selectedWords[0].word;
+            selectedWords = [];
+            const germanButton = $(`.highlighted:contains(${selectedWord.german})`);
+            const englishButton = $(`.highlighted:contains(${selectedWord.english})`);
+            germanButton.removeClass("highlighted");
+            englishButton.removeClass("highlighted");
+
+            const newRandomWords = getRandomElements(words, 1);
+            const newWord = newRandomWords[0];
+            wordBankLeft.push(newWord);
+            wordBankRight.push(newWord);
 
 
-    $.get("/api/words", function (wordsArray) {
-        displayRandomWords(wordsArray);
+            setTimeout(function () {
+                germanButton.addClass("fade-out");
+                englishButton.addClass("fade-out");
+            }, 300);
+
+            setTimeout(function () {
+                germanButton.removeClass("fade-out");
+                englishButton.removeClass("fade-out");
+                germanButton.text("");
+                englishButton.text("");
+            }, 1500);
+
+            setTimeout(function () {
+                const randomWordGer = getRandomAndRemove(wordBankRight);
+                const randomWordEng = getRandomAndRemove(wordBankLeft);
+                germanButton.data({ "word": randomWordGer });
+                germanButton.text(randomWordGer.german);
+                englishButton.data({ "word": randomWordEng });
+                englishButton.text(randomWordEng.english);
+            }, 2000);
+        }
+
+        function getRandomElements(arr, count) {
+            const shuffled = arr.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function getRandomAndRemove(arr) {
+            // Проверяем, что массив не пустой
+            if (arr.length === 0) {
+                return null; // Если массив пуст, возвращаем null
+            }
+
+            // Генерируем случайный индекс
+            const randomIndex = Math.floor(Math.random() * arr.length);
+
+            // Получаем случайный элемент
+            const randomElement = arr[randomIndex];
+
+            // Удаляем элемент из массива
+            arr.splice(randomIndex, 1);
+
+            return randomElement; // Возвращаем случайный элемент
+        }
+
+        $.get("/api/words", function (wordsArray) {
+            displayRandomWords(wordsArray);
+        });
     });
-});
-
 </script>
-
 
 </body>
 </html>
+
+
