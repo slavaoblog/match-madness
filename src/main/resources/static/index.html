@@ -48,23 +48,21 @@
             transition: border-color 0.5s, color 0.5s;
         }
 
-        button:hover {
-            background-color: #2e86de; /* Измените цвет при наведении, если нужно */
-        }
-
         button:active {
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); /* Эффект при нажатии */
-        }
-
-        button.selected {
-            background-color: #000000;
-            border-color: #3498db;
-            color: #3498db; /* Цвет текста */
         }
 
         button.highlighted {
             border-color: #f39c12; /* Цвет границы при наведении */
             color: #f39c12; /* Цвет текста при наведении */
+        }
+
+        button.correctly-matched {
+            background-color: #28a745; /* Зелёный цвет фона */
+        }
+
+        button.not-matched {
+            background-color: #ff0000; /* Зелёный цвет фона */
         }
 
         button.fade-out {
@@ -117,12 +115,14 @@
         let words;
         let previousHighlightedButton = null;
         let previousColumn = null;
+        let remainingWords;
 
         function displayRandomWords(wordsArray) {
             words = wordsArray;
+            remainingWords = [...wordsArray]; // Копируем массив слов
             const leftColumnContainer = $("#leftColumn");
             const rightColumnContainer = $("#rightColumn");
-            const randomWords = getRandomElements(wordsArray, 5);
+            const randomWords = getRandomElements(remainingWords, 5);
 
             // Получаем случайный порядок индексов
             const randomIndexes = getRandomIndexes(randomWords.length);
@@ -134,6 +134,7 @@
             // Создаем кнопки для правого столбца с использованием того же порядка
             for (let i = 0; i < randomIndexes.length; i++) {
                 createButtonsForWord(rightColumnContainer, randomWords[randomIndexes[i]], "german");
+                remainingWords = remainingWords.filter(word => word.id !== randomWords[randomIndexes[i]].id);
             }
         }
 
@@ -210,6 +211,7 @@
             } else {
                 // Если выбраны несколько слов, очистим выбор
                 selectedWords = [];
+                $(".highlighted").addClass("not-matched");
                 $(".highlighted").removeClass("highlighted");
             }
 
@@ -237,35 +239,49 @@
             selectedWords = [];
             const germanButton = $(`.highlighted:contains(${selectedWord.german})`);
             const englishButton = $(`.highlighted:contains(${selectedWord.english})`);
+
             germanButton.removeClass("highlighted");
             englishButton.removeClass("highlighted");
 
-            const newRandomWords = getRandomElements(words, 1);
+            germanButton.addClass("correctly-matched");
+            englishButton.addClass("correctly-matched");
+
+            setTimeout(function () {
+                germanButton.removeClass("correctly-matched");
+                englishButton.removeClass("correctly-matched");
+            }, 500);
+
+            const newRandomWords = getRandomElements(remainingWords, 1);
             const newWord = newRandomWords[0];
             wordBankLeft.push(newWord);
             wordBankRight.push(newWord);
 
+            // Убираем использованные слова из оставшихся
+            remainingWords = remainingWords.filter(word => word.id !== newWord.id);
 
             setTimeout(function () {
                 germanButton.addClass("fade-out");
                 englishButton.addClass("fade-out");
-            }, 300);
+            }, 400);
 
-            setTimeout(function () {
-                germanButton.removeClass("fade-out");
-                englishButton.removeClass("fade-out");
-                germanButton.text("");
-                englishButton.text("");
-            }, 1500);
 
-            setTimeout(function () {
-                const randomWordGer = getRandomAndRemove(wordBankRight);
-                const randomWordEng = getRandomAndRemove(wordBankLeft);
-                germanButton.data({ "word": randomWordGer });
-                germanButton.text(randomWordGer.german);
-                englishButton.data({ "word": randomWordEng });
-                englishButton.text(randomWordEng.english);
-            }, 2000);
+            if (remainingWords.length > 0) {
+                setTimeout(function () {
+                    germanButton.removeClass("fade-out");
+                    englishButton.removeClass("fade-out");
+                    germanButton.text("");
+                    englishButton.text("");
+                }, 1700);
+
+                setTimeout(function () {
+                    const randomWordGer = getRandomAndRemove(wordBankRight);
+                    const randomWordEng = getRandomAndRemove(wordBankLeft);
+                    germanButton.data({"word": randomWordGer});
+                    germanButton.text(randomWordGer.german);
+                    englishButton.data({"word": randomWordEng});
+                    englishButton.text(randomWordEng.english);
+                }, 1700);
+            }
         }
 
         function getRandomElements(arr, count) {
